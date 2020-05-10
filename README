@@ -1,0 +1,9 @@
+Code is done in python 3.7.3
+In the "workdir" directory exec.sh and build.sh files are stored. Althought build.sh is empty as it is not needed to run python code.
+
+For lexical analysis PLY is used.
+The exec.sh file should be run as follows...
+
+./exec.sh <input_file>
+Absolute path should be used at all times for the input files.
+
