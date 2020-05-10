@@ -10,13 +10,18 @@ breakFlag = False
 """
 change T_IntConstant to Intconstant
 """
+
+def printBool(st):
+    #print(st)
+    return True
+
 typeMap = {const.INTCONSTANT.split("_")[1]: const.INT, const.DOUBLECONSTANT.split("_")[1]:const.DOUBLE, const.BOOLCONSTANT.split("_")[1]: const.BOOL, const.STRINGCONSTANT.split("_")[1]: const.STRING }
-print(typeMap)
+printBool(typeMap)
 def getType(node):
     
-    print("inside getType()")
+    printBool("inside getType()")
     if "FieldAccess" in node.tag:
-        print("fieldaccess found....")
+        printBool("fieldaccess found....")
         child = tree.children(node.identifier)
         if "Identifier" in child[0].tag:
             ident  = child[0].tag.split(":")[1].strip()
@@ -42,40 +47,40 @@ def DFSUtil(v, visited):
     global symbolTable
     visited[str(v)] = True
     node = tree.get_node(v)
-    print("NODE......", node)
+    printBool("NODE......" +  str(node))
     if "Expr" in node.identifier:
 
-        print("Expr found..^_^", node.tag)
+        printBool("Expr found..^_^" +  node.tag)
         children = tree.children(node.identifier)
         left = children[0]
         operator = children[1]
         right = children[2]
 
-        #print("left", left, "right ", right)
+        #printBool("left", left, "right ", right)
 
         if "Expr" in left.tag:
-            print("expr found in left")
+            printBool("expr found in left")
             typeLeft = DFSUtil(left.identifier, visited)
             if typeLeft == "False":
                 return 
         else:
-            print("inside else... for left")
+            printBool("inside else... for left")
             typeLeft = getType(left)
         
         if "Expr" in right.tag:
-            print("expr found in right")
+            printBool("expr found in right")
             typeRight = DFSUtil(right.identifier, visited)
             if typeRight == "False":
                 return
         else:
-            print("inside else ... for right")
+            printBool("inside else ... for right")
             typeRight = getType(right)
 
-        print("printing types..", typeLeft)
+        printBool("printing types.." + typeLeft)
         #returning any one is fine
         if typeLeft == typeRight:
-            print("type matched...", typeLeft)
-            print("operator ", operator.tag)
+            printBool("type matched..." + typeLeft)
+            printBool("operator " + operator.tag)
             if operator.tag.split(":")[1].strip() in const.booleanOperators:
                 return "bool"
             
@@ -87,7 +92,7 @@ def DFSUtil(v, visited):
             return "False"
 
     elif "FnDecl" in node.tag:
-        print("inside fundecl handler...............")
+        printBool("inside fundecl handler...............")
         tempFunMap = {}
         counter = 1
         children = tree.children(node.identifier)
@@ -115,17 +120,17 @@ def DFSUtil(v, visited):
                 #work on void return
                 returnChild = None
                 returnChildren = tree.children(child.identifier)
-                print("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>")
+                printBool("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>")
                 for child in returnChildren:
-                    print(child)
+                    printBool(child)
                     if "ReturnStmt" in child.tag:
-                        print("return found")
+                        printBool("return found")
 
                         returnChild = child
 
-                print("RETURN CHILD...", returnChild)
+                printBool("RETURN CHILD..." +  str(returnChild))
                 if returnChild != None:
-                    print("return found")
+                    printBool("return found")
                     returnExpr = tree.siblings(returnChild.identifier)[-1]
                     if "Constant" in returnExpr.tag:
                         type = getType(returnExpr)
@@ -134,8 +139,8 @@ def DFSUtil(v, visited):
                     if type != tempFunMap["returnType"]:
                         print("*** Incompatible return: ",type, "given, ", tempFunMap["returnType"], " expected")
                 else:
-                    print("... not sure")
-                print("functions table...", functions)
+                    printBool("... not sure")
+                printBool("functions table..." + str(functions))
                 symbolTable.clear()
                 break
                 #### check for return type matching
@@ -147,27 +152,30 @@ def DFSUtil(v, visited):
 
    
     for i in tree.children(v): 
-        #print(i)
+        #printBool(i)
         if visited.get(str(i.identifier)) == None:
-            #print(i.identifier, " ",i.tag ) 
-            #print("not found")
+            #printBool(i.identifier, " ",i.tag ) 
+            #printBool("not found")
             if "AssignExpr" in i.tag:
-                print("assignment expr found.....")
+                printBool("assignment expr found.....")
                 fieldAccess = tree.children(i.identifier)
                 childOfChild = tree.children(fieldAccess[0].identifier)
                 identifier = childOfChild[0].tag.split(":")[1].strip()
-                print(symbolTable)
-                print("identifier = ", identifier)
+                printBool(symbolTable)
+                printBool("identifier = " + identifier)
                 typeLeft = symbolTable.get(identifier)
-                print("type = ", typeLeft)
+                printBool("type = " + typeLeft)
                 #do type check
                 
                 expr = tree.siblings(fieldAccess[0].identifier)
+                printBool("expr" +  str(expr))
                 if "FieldAccess" in expr[1].tag or "Constant" in expr[1].tag:
                     typeRight = getType(expr[1])
                 else:
+                    print(expr)
                     typeRight = DFSUtil(expr[1].identifier, visited)
                 if typeLeft != typeRight:
+                    print("typeright", typeRight)
                     print("*** Error in assignment")
                 continue
             elif "VarDecl" in i.tag:
@@ -180,23 +188,23 @@ def DFSUtil(v, visited):
                     globalSymbolTable[identifier] = type
                 else:
                     symbolTable[identifier] = type
-                print("symboltable ********************", symbolTable)
-                print("global symboltable ********************", globalSymbolTable)
+                printBool("symboltable ********************" + str(symbolTable))
+                printBool("global symboltable ********************"+ str(globalSymbolTable))
 
                 continue
             elif "LogicalExpr" in i.tag:
-                print("logical expr found")
+                printBool("logical expr found")
                 sthExpr = tree.children(i.identifier)
                 if "FieldAccess" in sthExpr[1].tag or "Constant" in sthExpr[1].tag:
-                    print("inside if field or const")
+                    printBool("inside if field or const")
                     type = getType(sthExpr[1])
                 else:
-                    print("inside else field or const")
+                    printBool("inside else field or const")
                     type = DFSUtil(i.identifier, visited)
-                print("type =", type)
+                printBool("type =" +  type)
                 continue
             elif "ForStmt" in i.tag or "WhileStmt" in i.tag:
-                print("for found")
+                printBool("for found")
                 breakFlag = True
                 DFSUtil(i.identifier, visited)
                 breakFlag = False
@@ -205,6 +213,7 @@ def DFSUtil(v, visited):
             
             elif "Call" in i.tag:
                 #should return fun ret type
+                print("funCall found")
                 children = tree.children(i.identifier)
                 numOfParam = len(children) - 1
                 funName = children[0].tag.split(":")[1].strip()
@@ -218,14 +227,16 @@ def DFSUtil(v, visited):
                     else:
                         for i in range(1, len(children)):
                             if "FieldAccess" in children[i].tag or "Constant" in children[i].tag:
+                                print("constant found")
                                 
                                 type = getType(children[i])
                             else:
+                                print("constant not found")
                                 type = DFSUtil(children[i].identifier, visited)
                             if type != function["param_" + str(i)]:
                                 print("Incompatible argument ", i, ":", type, "given, ", function["param_" + str(i)],  "expected")
                             else:
-                                print("good to go...")
+                                printBool("good to go...")
             
 
 
@@ -243,7 +254,7 @@ def DFSUtil(v, visited):
 
 def findFunByName(name):
     for function in functions:
-        print(function)
+        printBool(function)
         if function.get("identifier") == name:
             return function
     return None
@@ -255,7 +266,7 @@ def DFS(ROOT):
 
   
     DFSUtil(ROOT, visited) 
-    print("returning from DFS...")
+    printBool("returning from DFS...")
   
 
 

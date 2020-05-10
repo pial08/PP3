@@ -440,9 +440,15 @@ def Expr():
         
         printBool("checkpoint ...2 ")
         if tok.value == const.LPAREN:
-            tree.create_node("  " + str(tok.lineno) + "$" + prefix + "Call:", createParent("Call"), parent = parentNode)
-            tree.create_node("  " + str(tok.lineno) + "$Identifier: " + identifier, createParent("Identifier"), parent=createParent("Call"))
+            if assgnHead == "":
 
+                tree.create_node("  " + str(tok.lineno) + "$" + prefix + "Call:", createParent("Call"), parent = parentNode)
+                tree.create_node("  " + str(tok.lineno) + "$Identifier: " + identifier, createParent("Identifier"), parent=createParent("Call"))
+            else:
+                tree.create_node("  " + str(tok.lineno) + "$" + prefix + "Call:", createParent("Call"), parent = assgnHead)
+                tree.create_node("  " + str(tok.lineno) + "$Identifier: " + identifier, createParent("Identifier"), parent=createParent("Call"))
+            
+            
             setParent(createParent("Call"))
             printBool("checkpoint ... 3")
             updateTok()
