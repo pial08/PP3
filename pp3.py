@@ -21,10 +21,11 @@ def getType(node):
         if "Identifier" in child[0].tag:
             ident  = child[0].tag.split(":")[1].strip()
             type = symbolTable.get(ident)
+            
             ############# if not found... type error
             if type == None:
                 print("********variable not found in local")
-                type = globalSymbolTable.get(ident):
+                type = globalSymbolTable.get(ident)
                 if type == Node:
                     return "False"
                 else:
@@ -38,10 +39,10 @@ def getType(node):
         return type
 
 def DFSUtil(v, visited): 
-    
+    global symbolTable
     visited[str(v)] = True
     node = tree.get_node(v)
-    #print("NODE......", node)
+    print("NODE......", node)
     if "Expr" in node.identifier:
 
         print("Expr found..^_^", node.tag)
@@ -50,7 +51,7 @@ def DFSUtil(v, visited):
         operator = children[1]
         right = children[2]
 
-        print("left", left, "right ", right)
+        #print("left", left, "right ", right)
 
         if "Expr" in left.tag:
             print("expr found in left")
@@ -82,15 +83,14 @@ def DFSUtil(v, visited):
         elif typeLeft == None or typeRight == None:
             return "False"
         else:
-            print("*** Incompatible operands: ",typeLeft, operator.tag.split(":")[1],  typeRight)
+            print("*** Incompatible operands: ",typeLeft, operator.tag.split(":")[1].strip(),  typeRight)
             return "False"
 
-    elif "FnDecl" in node.identifier:
+    elif "FnDecl" in node.tag:
         print("inside fundecl handler...............")
         tempFunMap = {}
-        counter = 0
+        counter = 1
         children = tree.children(node.identifier)
-        print("len of children", len(children))
         for child in children:
             if "(return type)" in child.tag:
                 tempFunMap["returnType"] = child.tag.split(":")[1].strip()
@@ -109,12 +109,34 @@ def DFSUtil(v, visited):
                 symbolTable[identifier] = type
 
             elif "(body)" in child.tag:
-                print("symboltable... ^)^)^ before...", symbolTable)
                 DFSUtil(child.identifier, visited)
                 functions.append(tempFunMap)
+                
+                #work on void return
+                returnChild = None
+                returnChildren = tree.children(child.identifier)
+                print("<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>")
+                for child in returnChildren:
+                    print(child)
+                    if "ReturnStmt" in child.tag:
+                        print("return found")
+
+                        returnChild = child
+
+                print("RETURN CHILD...", returnChild)
+                if returnChild != None:
+                    print("return found")
+                    returnExpr = tree.siblings(returnChild.identifier)[-1]
+                    if "Constant" in returnExpr.tag:
+                        type = getType(returnExpr)
+                    else:
+                        type = DFSUtil(tree.siblings(returnChild.identifier)[-1].identifier, visited)
+                    if type != tempFunMap["returnType"]:
+                        print("*** Incompatible return: ",type, "given, ", tempFunMap["returnType"], " expected")
+                else:
+                    print("... not sure")
+                print("functions table...", functions)
                 symbolTable.clear()
-                print("symboltable... ^)^)^", symbolTable)
-                print("functions...***VVV***...", functions)
                 break
                 #### check for return type matching
             
@@ -141,18 +163,15 @@ def DFSUtil(v, visited):
                 #do type check
                 
                 expr = tree.siblings(fieldAccess[0].identifier)
-                print("Expr = ", expr)
                 if "FieldAccess" in expr[1].tag or "Constant" in expr[1].tag:
                     typeRight = getType(expr[1])
                 else:
                     typeRight = DFSUtil(expr[1].identifier, visited)
-                print("TypeRight =", typeRight)
                 if typeLeft != typeRight:
                     print("*** Error in assignment")
                 continue
             elif "VarDecl" in i.tag:
                 parent = tree.parent(i.identifier)
-                print("parent should be program....", parent)
                 
                 children = tree.children(i.identifier)
                 type = children[0].tag.split(":")[1].strip()
@@ -168,7 +187,6 @@ def DFSUtil(v, visited):
             elif "LogicalExpr" in i.tag:
                 print("logical expr found")
                 sthExpr = tree.children(i.identifier)
-                print("Expr = ", sthExpr)
                 if "FieldAccess" in sthExpr[1].tag or "Constant" in sthExpr[1].tag:
                     print("inside if field or const")
                     type = getType(sthExpr[1])
@@ -198,6 +216,20 @@ def DFSUtil(v, visited):
                     if numberofParamInTable != numOfParam:
                         print("*** Function ", funName, "expects ", numberofParamInTable, "arguments but ", numOfParam, "given")
                     else:
+                        for i in range(1, len(children)):
+                            if "FieldAccess" in children[i].tag or "Constant" in children[i].tag:
+                                
+                                type = getType(children[i])
+                            else:
+                                type = DFSUtil(children[i].identifier, visited)
+                            if type != function["param_" + str(i)]:
+                                print("Incompatible argument ", i, ":", type, "given, ", function["param_" + str(i)],  "expected")
+                            else:
+                                print("good to go...")
+            
+
+
+
                         
 
 
@@ -211,7 +243,8 @@ def DFSUtil(v, visited):
 
 def findFunByName(name):
     for function in functions:
-        if function.ge(name) in not None:
+        print(function)
+        if function.get("identifier") == name:
             return function
     return None
 
