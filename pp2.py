@@ -29,7 +29,7 @@ def findCol(tok):
     return lexanalysis.find_column(lexanalysis.contents, tok)
 
 def createParent(st):
-    return st + str(tok.lineno) + "_" + str(findCol(tok))
+    return st + ":" + str(tok.lineno) + "_" + str(findCol(tok))
 
 def setParent(st):
     global parentNode
@@ -395,7 +395,7 @@ def Expr():
 
 
     elif tok.value == const.MINUS:
-        tree.create_node("  " + str(tok.lineno) + "$" + prefix + "ArithmeticExpr:", createParent("ArithmeticExpr"), parent=parentNode)
+        tree.create_node("  " + str(tok.lineno) + "$" + prefix + "ArithmeticExpr:", createParent("ArithmeticExpr"), parent=assgnHead)
         tree.create_node("  " + str(tok.lineno) + "$Operator: " + str(tok.value), createParent("Operator"), parent=createParent("ArithmeticExpr"))            
         setParent(prevParent)
         unary = True
@@ -441,13 +441,17 @@ def Expr():
         printBool("checkpoint ...2 ")
         if tok.value == const.LPAREN:
             if assgnHead == "":
-
+                
                 tree.create_node("  " + str(tok.lineno) + "$" + prefix + "Call:", createParent("Call"), parent = parentNode)
                 tree.create_node("  " + str(tok.lineno) + "$Identifier: " + identifier, createParent("Identifier"), parent=createParent("Call"))
             else:
+                
                 tree.create_node("  " + str(tok.lineno) + "$" + prefix + "Call:", createParent("Call"), parent = assgnHead)
                 tree.create_node("  " + str(tok.lineno) + "$Identifier: " + identifier, createParent("Identifier"), parent=createParent("Call"))
             
+            """print(exprTree.root)
+            exprTree.show()
+            tree.show()"""               
             
             setParent(createParent("Call"))
             printBool("checkpoint ... 3")
