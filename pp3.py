@@ -90,7 +90,7 @@ def DFSUtil(v, visited):
     global breakFlag
     visited[str(v)] = True
     node = tree.get_node(v)
-    printBool("NODE......" +  str(node))
+    print("NODE......" +  str(node))
     
     if "Expr" in node.identifier:
 
@@ -219,9 +219,14 @@ def DFSUtil(v, visited):
                     else:
                         printBool("good to go...")
         return function["returnType"]
-
-
-
+    
+    elif "FieldAccess" in node.tag or "Constant" in node.tag:
+        
+        type = getType(node)
+        print("you are here...s", type)
+        return type
+    elif "ReadInteger" in node.tag or "ReadLine" in node.tag:
+        return "int"
    
     for i in tree.children(v): 
         printBool("child of i....******" + str(i))
@@ -315,18 +320,23 @@ def DFSUtil(v, visited):
                             else:
                                 #print("constant not found")
                                 type = DFSUtil(children[j].identifier, visited)
-                            print("children_j = ", i)
-                            err = calculateErrLine(i)
+                            print("children_j = ", children[j])
+                            
                             
                             if type != function["param_" + str(j)]:
+                                err = calculateErrLine(children[j])
                                 reportError("***Incompatible argument " + str(j) + ": " + type + " given, " + function["param_" + str(j)] + " expected", children[j], err)
                                 break
                             else:
                                 printBool("good to go...")
             
             elif "IfStmt" in i.tag:
-               
-                DFSUtil(i.identifier, visited) 
+
+                type = DFSUtil(tree.children(i.identifier)[0].identifier, visited)
+                print("type in if", type)
+                if type != "bool" and type != None:
+                    err = calculateErrLine(tree.children(i.identifier)[0])
+                    reportError("*** Test expression must have boolean type", i, err)  
                 continue
 
             elif "PrintStmt" in i.tag:
@@ -364,20 +374,40 @@ def DFSUtil(v, visited):
 
 
 def calculateErrLine(child):
-    
+    print("errorcalculate ...", child)
+    errorLine = ""
     if "Call" in child.tag:
         childOfChild = tree.children(child.identifier)
         beginCol = childOfChild[0].identifier.split(":")[1].split("_")[1]
         endCol = childOfChild[-1].identifier.split(":")[1].split("_")[1]
         numberOfChar = int(endCol) - int(beginCol) + 1 + 2
         numberOfWhiteSpace = int(endCol)  - numberOfChar
-        errorLine = ""
-        for i in range(numberOfWhiteSpace):
-            errorLine += " "
-        for i in range(numberOfChar):
-            errorLine += "^"
-        return errorLine
-               
+        
+        
+    
+    elif "(actuals)" in child.tag or "(test)" in child.tag:
+        lineNo = child.tag.split("$")[0].strip()
+        line = pp2.lexanalysis.lines[int(lineNo) - 1]
+        if "," not in line:
+            #single expr exists
+            
+            numberOfChar = len(line.split(")")[0].split("(")[1])
+            numberOfWhiteSpace = len(line.split(")")[0]) - numberOfChar
+
+            
+    elif "ReadInteger" in child.tag or "ReadLine" in child.tag:
+        lineNo = child.tag.split("$")[0].strip()
+        line = pp2.lexanalysis.lines[int(lineNo) - 1]
+        numberOfWhiteSpace = len(line.split("(")[0]) + 1
+        numberOfChar = len(child.identifier.split(":")[0]) + 2
+
+
+    for i in range(numberOfWhiteSpace):
+        errorLine += " "
+    for i in range(numberOfChar):
+        errorLine += "^"  
+
+    return errorLine
 
 def findFunByName(name):
     for function in functions:
