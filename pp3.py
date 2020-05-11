@@ -215,7 +215,7 @@ def DFSUtil(v, visited):
                         type = DFSUtil(children[i].identifier, visited)
                     if type != function["param_" + str(i)]:
                         reportError("***Incompatible argument " + str(i) + ": " + type + " given, " + function["param_" + str(i)] + " expected", children[i])
-                        break
+                        
                     else:
                         printBool("good to go...")
         return function["returnType"]
