@@ -108,9 +108,11 @@ def Program():
 def ProgramP():
     #updateTok()
     if tok != None:
+        
         #updateTok()
         #if tok != None:
         return Program()
+    
     else: 
         printBool("ending")
         return True
@@ -169,7 +171,6 @@ def FunctionDecl():
     printBool("inside funcdecl")
     updateTok()
     forms  = Formals()
-    
     updateTok()
     return forms  and StmtBlock()
 
@@ -213,13 +214,13 @@ def Formals():
 def StmtBlock():
     global parentNode
     prevParent = parentNode
-    printBool("inside stmtBlock")
     
     tree.create_node("   " + "$(body) StmtBlock: ", createParent("StmtBlock"), parent=parentNode)
     parentNode = createParent("StmtBlock")
     if tok.value == const.LCURLEY:
         updateTok()
         if tok.value == const.RCURLEY:
+            updateTok()
             return True and setParent(prevParent)
         else:
             stmtBlckVar = VariableDeclRec() and printBool("token inside stmtBlock... " + tok.value) and  tok.value == const.RCURLEY

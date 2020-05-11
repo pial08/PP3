@@ -1,9 +1,12 @@
-double Pi(int a) { return 3.14159; }
+void test(int a) {}
+
 void main()
 {
-  int a;
-   string arr;
-   a = "hello";
-   Print(3.5, a, Pi(10));
-   a = 10 + main;
+   int a;
+
+   test(3.0 * 5.6 - 1.0);
+   if (ReadInteger()) 1;
+   if (ReadLine()) 1;
+   if (a) 1;
+   test(4);
 }
