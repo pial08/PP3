@@ -49,7 +49,6 @@ def reportError(st, node, error=None):
         print(errorLine)
     print(st)
     print("")
-    print("")
 
     #print("node in report error...", node)
 
@@ -67,7 +66,6 @@ def getType(node):
             
             ############# if not found... type error
             if type == None:
-                print("********variable not found in local")
                 type = globalSymbolTable.get(ident)
                 if type == None:
                     reportError("*** No declaration found for variable " + "\'" + ident + "\'", tree.children(node.identifier)[0])
@@ -90,11 +88,8 @@ def DFSUtil(v, visited):
     global breakFlag
     visited[str(v)] = True
     node = tree.get_node(v)
-    print("NODE......" +  str(node))
-    
     if "Expr" in node.identifier:
 
-        print("Expr found..^_^" +  node.tag)
         children = tree.children(node.identifier)
         if len(children) == 2:
             type = getType(children[1])
@@ -184,7 +179,7 @@ def DFSUtil(v, visited):
                     else:
                         type = DFSUtil(tree.siblings(returnChild.identifier)[-1].identifier, visited)
                     if type != tempFunMap["returnType"]:
-                        print("*** Incompatible return: ",type, "given, ", tempFunMap["returnType"], " expected")
+                        reportError("*** Incompatible return: " + type, " given, " + tempFunMap["returnType"] + " expected", returnChild)
                 else:
                     printBool("... not sure")
                 printBool("functions table..." + str(functions))
@@ -223,11 +218,17 @@ def DFSUtil(v, visited):
     elif "FieldAccess" in node.tag or "Constant" in node.tag:
         
         type = getType(node)
-        print("you are here...s", type)
         return type
-    elif "ReadInteger" in node.tag or "ReadLine" in node.tag:
+    elif "ReadInteger" in node.tag:
         return "int"
-   
+    elif "ReadLine" in node.tag:
+        return "string"
+
+
+    
+
+
+
     for i in tree.children(v): 
         printBool("child of i....******" + str(i))
         if visited.get(str(i.identifier)) == None:
@@ -250,7 +251,6 @@ def DFSUtil(v, visited):
                 else:
                     typeRight = DFSUtil(expr[1].identifier, visited)
                 if typeLeft != typeRight and not (typeLeft == None or typeRight == None):
-                    print("typeright", typeRight)
                     reportError("*** Incompatible operands: " + typeLeft + " = " + typeRight, expr[0])
                 continue
             elif "VarDecl" in i.tag:
@@ -268,7 +268,6 @@ def DFSUtil(v, visited):
 
                 continue
             elif "LogicalExpr" in i.tag:
-                print("logical expr found", i.tag)
                 sthExpr = tree.children(i.identifier)
                 if "FieldAccess" in sthExpr[1].tag or "Constant" in sthExpr[1].tag:
                     printBool("inside if field or const")
@@ -314,26 +313,20 @@ def DFSUtil(v, visited):
                     else:
                         for j in range(1, len(children)):
                             if "FieldAccess" in children[j].tag or "Constant" in children[j].tag:
-                                print("constant found")
                                 
                                 type = getType(children[j])
                             else:
-                                #print("constant not found")
                                 type = DFSUtil(children[j].identifier, visited)
-                            print("children_j = ", children[j])
                             
                             
                             if type != function["param_" + str(j)]:
                                 err = calculateErrLine(children[j])
                                 reportError("***Incompatible argument " + str(j) + ": " + type + " given, " + function["param_" + str(j)] + " expected", children[j], err)
-                                break
                             else:
                                 printBool("good to go...")
             
             elif "IfStmt" in i.tag:
-
                 type = DFSUtil(tree.children(i.identifier)[0].identifier, visited)
-                print("type in if", type)
                 if type != "bool" and type != None:
                     err = calculateErrLine(tree.children(i.identifier)[0])
                     reportError("*** Test expression must have boolean type", i, err)  
@@ -374,7 +367,6 @@ def DFSUtil(v, visited):
 
 
 def calculateErrLine(child):
-    print("errorcalculate ...", child)
     errorLine = ""
     if "Call" in child.tag:
         childOfChild = tree.children(child.identifier)
@@ -429,7 +421,7 @@ def DFS(ROOT):
 
 tree = pp2.getAST()
 
-tree.show(key = False, line_type = 'ascii-sp')
+#tree.show(key = False, line_type = 'ascii-sp')
 #print(tree.size())
 ROOT = tree.root
 #print(ROOT)

@@ -1,2 +1,2 @@
 cd ../
-python3 pp2.py $1
+python3 pp3.py $1
